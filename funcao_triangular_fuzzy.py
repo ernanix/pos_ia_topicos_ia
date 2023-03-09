@@ -20,7 +20,7 @@ d = int(input("Digite o valor de d:"))
 coordenada_x = list(range((2*d)+1))
 coordenada_y = funcao_triangular(d)
 
-fig, ax = plt.subplots(figsize=(6, 3))
+fig, ax = plt.subplots(figsize=(10, 3))
 ax.set(xlim=(-1, (2*d)+1), ylim=(0, 1))
 ax.scatter(x=0,y=0)
 ax.scatter(x=d,y=0,label="b")
