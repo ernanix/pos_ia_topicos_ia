@@ -7,15 +7,19 @@ import math
 #  Passo 1 do AG, cria a populacao inicial
 #
 
-def criacaoCidades(tamanho):
+def criacaoCidades(qtdCidades,tamEspaco):
     cidades = [];
-    for x in range(tamanho):
-        cidades.append( (random.randrange(10),random.randrange(10)) );
+    for x in range(qtdCidades):
+        cidadeEstaLista = False
+        while not cidadeEstaLista:
+          novaCidade = (random.randrange(tamEspaco),random.randrange(tamEspaco))
+          cidadeEstaLista = novaCidade not in cidades
+        cidades.append(novaCidade);
     return cidades;
 
-def populacaoInicial(qtdCidades,tamPopulacao):
+def populacaoInicial(qtdCidades,tamPopulacao,tamEspaco):
     #Cria as cidades
-    cidades = criacaoCidades(qtdCidades)
+    cidades = criacaoCidades(qtdCidades,tamEspaco)
     populacaoInicial = []
     for x in range(tamPopulacao):
         pop = random.sample(cidades,len(cidades))
@@ -53,48 +57,47 @@ def preservaMelhor(geracao,nova):
   #print('melhor: ', nova, geracao[maior])
   return geracao[maior]
 
-def cruzamento(pop, qdade, nova):
+def cruzamento(listaCidades, populacao, qdade, nova):
   qdeSaida = len(nova) + qdade
   while len(nova)<qdeSaida:
-    indA = random.randrange(0,len(pop));
+    indA = random.randrange(0,len(populacao));
     indB = indA;
     while indA==indB:
-      indB = random.randrange(0,len(pop));
-    # adapta a escala de valores de -10:10 para 0:20
-    p1 = pop[indA]+10
-    p2 =  pop[indB]+10
-    v1 = bit2vet( p1 );
-    v2 = bit2vet( p2 );
-    corte = random.randrange(28,31);
-    novoV1 =  v1[0:corte];
-    novoV1.extend( v2[corte:] );
-    novoV2 =  v2[0:corte];
-    novoV2.extend( v1[corte:] );
-    # print( 'saida 1 (v1,corte,v2) ',v1[0:corte], v2[corte:])
-    # print( 'saida 2 (v2,corte,v1) ',v2[0:corte], v1[corte:])
-    v1num = bin2num(novoV1)-10;
-    if v1num >= -10 and v1num<= 10:
-      nova.append( v1num );
-    if len(nova)<qdeSaida:
-      v2num = bin2num(novoV2)-10;
-      if v2num >= -10 and v2num<= 10:
-        nova.append( v2num );
+      indB = random.randrange(0,len(populacao));
     
 
-def mutacao(pop, qdade, novo):
-  qdeSaida = len(novo) + qdade
-  while len(novo)<qdeSaida:
-    indA = random.randrange(0,len(pop));
-    p1 = pop[indA]+10
-    v1 = bit2vet( p1 );
-    pos = random.randrange(27,32);
-    if v1[pos] == 0:
-      v1[pos] = 1;
-    else:
-      v1[pos] = 0;
-    v1num = bin2num(v1)-10;
-    if v1num>=-10 and v1num<=10:
-      novo.append( v1num );
+    corte = random.randrange(len(indA)-10,len(indA)-1);
+    filho1 =  indA[:corte] + indB[corte:];
+    filho2 =  indB[:corte] + indA[corte:];
+
+    filho1 = corrigeCruzamento(listaCidades,filho1,corte)
+    filho2 = corrigeCruzamento(listaCidades,filho2,corte)
+
+    nova.append(filho1)
+    nova.append(filho2)
+    
+def corrigeCruzamento(listaCidades,individuo,corte):
+    duplicados = [x for i, x in enumerate(individuo) if i != individuo.index(x)]
+    faltantes = list(set(listaCidades)-set(individuo))
+    indices = [individuo.index(x,corte) for x in duplicados]
+    pos = 0
+    for x in indices:
+       individuo[x] = faltantes[pos]
+       pos = pos+1
+    return individuo
+
+def mutacao(populacao, qdade, nova):
+  qdeSaida = len(nova) + qdade
+  while len(nova)<qdeSaida:
+    individuo = random.randrange(0,len(populacao))
+    posicao1 = random.randrange(0,len(posicao1))
+    posicao2 = random.randrange(0,len(posicao1))
+    valorPos1 = individuo[posicao1]
+    valorPos2 = individuo[posicao2]
+    individuo[posicao1] = valorPos2
+    individuo[posicao2] = valorPos1
+    nova.append(individuo)
+    
 
 def plotaPercurso(cidades):
     x = [c[0] for c in cidades]
@@ -106,12 +109,13 @@ def plotaPercurso(cidades):
     plt.show()
     
 qtdCidades = 6
+tamEspaco = 10
 tamPopInicial = 2
 numGeracoes = 10
 
 random.seed(10)
 
-populacao0 = populacaoInicial(qtdCidades,tamPopInicial)
+populacao0 = populacaoInicial(qtdCidades,tamPopInicial,tamEspaco)
 avaliacao0 = avaliacao(populacao0)
 
 geracao = populacao0
