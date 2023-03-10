@@ -17,12 +17,11 @@ def criacaoCidades(qtdCidades,tamEspaco):
         cidades.append(novaCidade);
     return cidades;
 
-def populacaoInicial(qtdCidades,tamPopulacao,tamEspaco):
+def populacaoInicial(listaCidades,tamPopulacao):
     #Cria as cidades
-    cidades = criacaoCidades(qtdCidades,tamEspaco)
     populacaoInicial = []
     for x in range(tamPopulacao):
-        pop = random.sample(cidades,len(cidades))
+        pop = random.sample(listaCidades,len(listaCidades))
         populacaoInicial.append(pop)
     return populacaoInicial
 
@@ -45,28 +44,26 @@ def avaliacao(populacao):
     fit.append(round(1/calculoPercurso(pop),6))
   return fit
 
-
-def preservaMelhor(geracao,nova):
-  ava = avaliacao(geracao)
-  maior = 0;
-  for i in range(1,len(ava)):
-    #print(f'comparando {maior} ({geracao[maior]} : {ava[maior]}) com {i} ({geracao[i]} :{ava[i]}) ')
-    if ava[maior] < ava[i]:
-      maior = i
-  nova.append( geracao[maior] )
-  #print('melhor: ', nova, geracao[maior])
-  return geracao[maior]
-
-def cruzamento(listaCidades, populacao, qdade, nova):
-  qdeSaida = len(nova) + qdade
-  while len(nova)<qdeSaida:
-    indA = random.randrange(0,len(populacao));
-    indB = indA;
-    while indA==indB:
-      indB = random.randrange(0,len(populacao));
+def preservaMelhores(avaliacao,geracao,nova):
+  qdeMelhores = round(len(geracao)/2)
+  listaMelhores = sorted(range(len(avaliacao)), key=lambda i: avaliacao[i], reverse=True)[:qdeMelhores]
+  for x in listaMelhores:
+     nova.append(geracao[x])
+   
+ 
+def cruzamento(listaCidades, geracao, nova):
+  qdeSaida = round(len(geracao)/2)-1
+  tamMaxNova = len(nova) + qdeSaida
+  while len(nova)<tamMaxNova:
+    indexIndA = random.randrange(0,len(geracao));
+    indexIndB = random.randrange(0,len(geracao));
+    while indexIndA==indexIndB:
+      indexIndB = random.randrange(0,len(geracao));
     
+    indA = geracao[indexIndA]
+    indB = geracao[indexIndB]
 
-    corte = random.randrange(len(indA)-10,len(indA)-1);
+    corte = random.randrange(len(geracao)*0.6,len(geracao)-1);
     filho1 =  indA[:corte] + indB[corte:];
     filho2 =  indB[:corte] + indA[corte:];
 
@@ -74,7 +71,8 @@ def cruzamento(listaCidades, populacao, qdade, nova):
     filho2 = corrigeCruzamento(listaCidades,filho2,corte)
 
     nova.append(filho1)
-    nova.append(filho2)
+    if len(nova)<tamMaxNova:
+      nova.append(filho2)
     
 def corrigeCruzamento(listaCidades,individuo,corte):
     duplicados = [x for i, x in enumerate(individuo) if i != individuo.index(x)]
@@ -86,17 +84,15 @@ def corrigeCruzamento(listaCidades,individuo,corte):
        pos = pos+1
     return individuo
 
-def mutacao(populacao, qdade, nova):
-  qdeSaida = len(nova) + qdade
-  while len(nova)<qdeSaida:
-    individuo = random.randrange(0,len(populacao))
-    posicao1 = random.randrange(0,len(posicao1))
-    posicao2 = random.randrange(0,len(posicao1))
-    valorPos1 = individuo[posicao1]
-    valorPos2 = individuo[posicao2]
-    individuo[posicao1] = valorPos2
-    individuo[posicao2] = valorPos1
-    nova.append(individuo)
+def mutacao(populacao, nova):
+   individuo = random.choice(populacao)
+   posicao1 = random.randrange(0,len(individuo))
+   posicao2 = random.randrange(0,len(individuo))
+   valorPos1 = individuo[posicao1]
+   valorPos2 = individuo[posicao2]
+   individuo[posicao1] = valorPos2
+   individuo[posicao2] = valorPos1
+   nova.append(individuo)
     
 
 def plotaPercurso(cidades):
@@ -108,27 +104,36 @@ def plotaPercurso(cidades):
 
     plt.show()
     
-qtdCidades = 6
-tamEspaco = 10
-tamPopInicial = 2
-numGeracoes = 10
+qtdCidades = 100
+tamEspaco = 100
+tamPopInicial = 100
+numGeracoes = 5000
 
-random.seed(10)
+random.seed(100)
 
-populacao0 = populacaoInicial(qtdCidades,tamPopInicial,tamEspaco)
-avaliacao0 = avaliacao(populacao0)
+listaCidades = criacaoCidades(qtdCidades,tamEspaco)
+populacaoInicial = populacaoInicial(listaCidades,tamPopInicial)
 
-geracao = populacao0
+geracao = populacaoInicial
 
-while numGeracoes > 0:
+for numGeracaoAtual in range(0,numGeracoes):
    nova = []
-   preservaMelhor(geracao,nova)
-   cruzamento(geracao, 3, nova);
-   mutacao(geracao, 1, nova);
-   numGeracoes=numGeracoes-1;  
-   avaliacao = avaliacao(nova)    
-   nova2 = sorted(zip(avaliacao,nova),reverse=True)
-   geracao = [x for _,x in nova2]
-   print( f'Geracao {numGeracoes} pop= {geracao}')
+   avaliacaoGeracao = avaliacao(geracao)
+   #Selecioná os 50% melhores
+   preservaMelhores(avaliacaoGeracao,geracao,nova)
+   #Cruzamento da população atual, gerando 50% - 1 novos indivíduos
+   cruzamento(listaCidades, geracao, nova);
+   #Mutação de 1 indivíduo aleatório da população atual
+   mutacao(geracao, nova);
+   
+   ##Pegar o melhor valor da geração atual:
+   indiceValorMax = avaliacaoGeracao.index(max(avaliacaoGeracao))
+   valorMax = avaliacaoGeracao[indiceValorMax]
+   individuoMax = geracao[indiceValorMax]  
+   print(f'A melhor distância encontrada para a geração {numGeracaoAtual}: {valorMax}')
+   print(f'O melhor percurso encontrado para a geração {numGeracaoAtual}: {individuoMax}')
+   if (numGeracaoAtual == 0) or (numGeracaoAtual == numGeracoes-1):
+      plotaPercurso(individuoMax)
+   geracao = nova.copy()
 
-print(f'A melhor solucao encontrada: {geracao[0]}')
+   
