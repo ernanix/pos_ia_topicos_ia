@@ -40,19 +40,19 @@ def calculoPercurso(cidades):
 def avaliacao(populacao):
   fit = []
   for pop in populacao:
-    fit.append(round(1/calculoPercurso(pop),6))
+    fit.append(round(1/calculoPercurso(pop),8))
   return fit
 
 #Seleciona os melhores de acordo com o rank baseado no cálculo da avaliação
 def preservaMelhores(avaliacao,geracao,nova):
-  qdeMelhores = round(len(geracao)/2)
+  qdeMelhores = round(len(geracao)*0.3)
   listaMelhores = sorted(range(len(avaliacao)), key=lambda i: avaliacao[i], reverse=True)[:qdeMelhores]
   for x in listaMelhores:
      nova.append(geracao[x])
    
 #Cruza 2 indivíduos, gerando metade menos 1 novos indivíduos 
 def cruzamento(listaCidades, geracao, nova):
-  qdeSaida = round(len(geracao)/2)-1
+  qdeSaida = round(len(geracao)*0.7)-2
   tamMaxNova = len(nova) + qdeSaida
   while len(nova)<tamMaxNova:
     indexIndA = random.randrange(0,len(geracao));
@@ -62,7 +62,7 @@ def cruzamento(listaCidades, geracao, nova):
     
     indA = geracao[indexIndA]
     indB = geracao[indexIndB]
-    rangeIni = round(len(geracao)*0.6)
+    rangeIni = round(len(geracao)*0.5)
     rangeFim = len(geracao)-1
     corte = random.randrange(rangeIni,rangeFim);
     filho1 =  indA[:corte] + indB[corte:];
@@ -88,14 +88,15 @@ def corrigeCruzamento(listaCidades,individuo,corte):
 
 #Mutação de um indivíduo da população trocando a posição de duas cidades
 def mutacao(populacao, nova):
-   individuo = random.choice(populacao)
-   posicao1 = random.randrange(0,len(individuo))
-   posicao2 = random.randrange(0,len(individuo))
-   valorPos1 = individuo[posicao1]
-   valorPos2 = individuo[posicao2]
-   individuo[posicao1] = valorPos2
-   individuo[posicao2] = valorPos1
-   nova.append(individuo)
+   while len(nova) < len(populacao):
+      individuo = random.choice(populacao)
+      posicao1 = random.randrange(0,len(individuo))
+      posicao2 = random.randrange(0,len(individuo))
+      valorPos1 = individuo[posicao1]
+      valorPos2 = individuo[posicao2]
+      individuo[posicao1] = valorPos2
+      individuo[posicao2] = valorPos1
+      nova.append(individuo)
     
 #Representação gráfica do percurso
 def plotaPercurso(cidades,numGeracao):
@@ -123,7 +124,7 @@ tamEspaco = 100
 #Parâmetro 3 - Tamanho da população inicial
 tamPopInicial = 1000
 #Parâmetro 4 - Número de gerações
-numGeracoes = 5000
+numGeracoes = 15000
 
 random.seed(1400)
 
@@ -150,7 +151,7 @@ for numGeracaoAtual in range(0,numGeracoes):
    valorMax = avaliacaoGeracao[indiceValorMax]
    individuoMax = geracao[indiceValorMax]  
    print(f'A melhor distância encontrada para a geração {numGeracaoAtual}: {valorMax}')
-   print(f'O melhor percurso encontrado para a geração {numGeracaoAtual}: {individuoMax}')
+   #print(f'O melhor percurso encontrado para a geração {numGeracaoAtual}: {individuoMax}')
    if (numGeracaoAtual == 0) or (numGeracaoAtual == numGeracoes-1):
       plotaPercurso(individuoMax,numGeracaoAtual)
    geracao = nova.copy()
